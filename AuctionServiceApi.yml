@@ -1,0 +1,16 @@
+openapi: '3.0.2'
+info:
+  title: Auction Service
+  description: This is a server that provides support for an auctioning system.
+  version: '1.0'
+
+servers:
+  - url: https://api.server.test/v1
+    description: Main server
+    
+paths:
+  /test:
+    get:
+      responses:
+        '200':
+          description: OK
