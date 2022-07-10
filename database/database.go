@@ -6,6 +6,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+var databaseURI string = "mongodb://localhost:27017"
+
 type Trade struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty"`
 	AuctionID primitive.ObjectID `bson:"_auctionid,omitempty"`
@@ -30,6 +32,8 @@ type Bid struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty"`
 	UserID    primitive.ObjectID `bson:"_userid,omitempty"`
 	AuctionID primitive.ObjectID `bson:"_auctionid,omitempty"`
+	Price     float64            `bson:"price,omitempty"`
+	Accepted  bool               `bson:"accepted,omitempty"`
 	Timestamp time.Time          `bson:"timestamp,omitempty"`
 	Type      Type               `bson:"type,omitempty"`
 }

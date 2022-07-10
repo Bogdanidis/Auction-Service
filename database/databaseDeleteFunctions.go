@@ -13,11 +13,11 @@ import (
 
 func DeleteAuction(c *gin.Context) {
 	/*establish connection*/
-	opt := options.Client().ApplyURI("mongodb://localhost:27017")
+	opt := options.Client().ApplyURI(databaseURI)
 	client, err := mongo.NewClient(opt)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not conect to database."})
-		panic(err)
+		return
 	}
 
 	ctx := context.TODO()
@@ -25,7 +25,7 @@ func DeleteAuction(c *gin.Context) {
 	err = client.Connect(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not conect to database."})
-		panic(err)
+		return
 	}
 
 	defer client.Disconnect(ctx)

@@ -11,14 +11,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-
 func GetAuctions(c *gin.Context) {
 	/* establish connection to the database*/
-	opt := options.Client().ApplyURI("mongodb://localhost:27017")
+	opt := options.Client().ApplyURI(databaseURI)
 	client, err := mongo.NewClient(opt)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong with database connection"})
-		panic(err)
+		return
 	}
 
 	ctx := context.TODO()
@@ -26,7 +25,7 @@ func GetAuctions(c *gin.Context) {
 	err = client.Connect(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong with database connection"})
-		panic(err)
+		return
 	}
 
 	defer client.Disconnect(ctx)
@@ -38,7 +37,7 @@ func GetAuctions(c *gin.Context) {
 	results, err := auctionsCollection.Find(ctx, bson.M{})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Empty auction collection"})
-		panic(err)
+		return
 	}
 
 	defer results.Close(ctx)
@@ -57,11 +56,11 @@ func GetAuctions(c *gin.Context) {
 
 func GetAuction(c *gin.Context) {
 	/* establish connection to the database*/
-	opt := options.Client().ApplyURI("mongodb://localhost:27017")
+	opt := options.Client().ApplyURI(databaseURI)
 	client, err := mongo.NewClient(opt)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong with database connection"})
-		panic(err)
+		return
 	}
 
 	ctx := context.TODO()
@@ -69,7 +68,7 @@ func GetAuction(c *gin.Context) {
 	err = client.Connect(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong with database connection"})
-		panic(err)
+		return
 	}
 
 	defer client.Disconnect(ctx)
@@ -81,9 +80,62 @@ func GetAuction(c *gin.Context) {
 	err = client.Database("auctionDB").Collection("auctions").FindOne(ctx, bson.M{"_id": objId}).Decode(&auction) //charge
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Empty auction collection"})
-		panic(err)
+		return
 	}
 
 	c.JSON(http.StatusOK, auction)
+
+}
+
+func GetBids(c *gin.Context) {
+	/* establish connection to the database*/
+	opt := options.Client().ApplyURI(databaseURI)
+	client, err := mongo.NewClient(opt)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong with database connection"})
+		return
+	}
+
+	ctx := context.TODO()
+
+	err = client.Connect(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong with database connection"})
+		return
+	}
+
+	defer client.Disconnect(ctx)
+	/*get the auction coreesponding to id */
+	var auction Auction
+	id := c.Param("id")
+	objId, _ := primitive.ObjectIDFromHex(id)
+
+	err = client.Database("auctionDB").Collection("auctions").FindOne(ctx, bson.M{"_id": objId}).Decode(&auction) //charge
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "Did not find auction."})
+		return
+	}
+
+	var bids []Bid
+	auctionDB := client.Database("auctionDB")
+	bidsCollection := auctionDB.Collection("bids")
+
+	results, err := bidsCollection.Find(ctx, bson.M{"_auctionid": objId})
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "Did not find bids in this auction."})
+		return
+	}
+
+	defer results.Close(ctx)
+	for results.Next(ctx) {
+		var singleBid Bid
+		if err = results.Decode(&singleBid); err != nil {
+			c.JSON(http.StatusInternalServerError, nil)
+		}
+
+		bids = append(bids, singleBid)
+	}
+
+	c.JSON(http.StatusOK, bids)
 
 }

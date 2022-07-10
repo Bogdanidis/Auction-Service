@@ -10,7 +10,7 @@ import (
 )
 
 func CreateDatabase() {
-	opt := options.Client().ApplyURI("mongodb://localhost:27017")
+	opt := options.Client().ApplyURI(databaseURI)
 	client, err := mongo.NewClient(opt)
 	if err != nil {
 		panic(err)
@@ -39,7 +39,7 @@ func CreateDatabase() {
 }
 func DeleteDatabase(c *gin.Context) {
 	/*establish connection*/
-	opt := options.Client().ApplyURI("mongodb://localhost:27017")
+	opt := options.Client().ApplyURI(databaseURI)
 	client, err := mongo.NewClient(opt)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong with database connection"})
