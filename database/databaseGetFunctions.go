@@ -79,7 +79,7 @@ func GetAuction(c *gin.Context) {
 
 	err = client.Database("auctionDB").Collection("auctions").FindOne(ctx, bson.M{"_id": objId}).Decode(&auction) //charge
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Empty auction collection"})
+		c.JSON(http.StatusNotFound, gin.H{"message": "Empty auction collection"})
 		return
 	}
 

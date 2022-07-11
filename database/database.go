@@ -47,6 +47,7 @@ type Auction struct {
 	EndingTimeStart time.Time            `bson:"endingtimestart,omitempty"`
 	EndingTimeEnd   time.Time            `bson:"endingtimeend,omitempty"`
 	Type            Type                 `bson:"type,omitempty"`
+	Active          bool                 `bson:"active,omitempty"`
 }
 
 type Product struct {

@@ -10,12 +10,16 @@ var serverURI = "localhost:8080"
 
 /*
 				TODOs
+-assets are only linked to auctions right?
 -(make get winning-bid request a service?)
--complete post asset request
+-(do we need bid validation service?)
+-change post asset to not connect asset with auction
+-enrich yaml
+-check heroku or render.com for deployment
 -parameterize and enrich testing
 -set ap auction ending time and service that terminates auction and declares winner, post trade
 -configure bidder, seller ... how to distinguish request sources, block features depending on user type
--enrich get auctions request, filters etc
+-enrich get auctions request, search filters etc
 
 */
 func main() {
@@ -30,9 +34,10 @@ func main() {
 
 	router.POST("/auctions", database.PostAuction)
 	router.POST("/products", database.PostProduct)
-	//router.POST("/asset/:productid", database.PostAsset) MHPWS AUTO KALUTERO?????????
-
-	router.POST("/auctions/:id/products/:productid/assets", database.PostAsset)
+	//router.POST("/auctions/:id/products/:productid/assets", database.PostAsset)
+	router.POST("/products/:id/assets", database.PostAsset)
+	//asociates asset with an auction
+	router.PATCH("/auctions/:id/assets/:assetid", database.PostAuctionAsset)
 	router.POST("/auctions/:id/bids", database.PostBid)
 
 	router.DELETE("/database", database.DeleteDatabase)

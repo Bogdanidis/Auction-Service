@@ -124,7 +124,7 @@ func PostAsset(c *gin.Context) {
 
 	/*get the product coresponding to productid */
 	var product Product
-	product_id := c.Param("productid")
+	product_id := c.Param("id")
 	product_objId, _ := primitive.ObjectIDFromHex(product_id)
 
 	err = client.Database("auctionDB").Collection("products").FindOne(ctx, bson.M{"_id": product_objId}).Decode(&product) //charge
@@ -133,19 +133,7 @@ func PostAsset(c *gin.Context) {
 		return
 	}
 
-	/*get the auction coresponding to auxtionid */
-	var auction Auction
-	auction_id := c.Param("id")
-	auction_objId, _ := primitive.ObjectIDFromHex(auction_id)
-
-	err = client.Database("auctionDB").Collection("auctions").FindOne(ctx, bson.M{"_id": auction_objId}).Decode(&auction) //charge
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"message": "Did not find auction"})
-		return
-	}
-
 	var newAsset Asset
-
 	//validate the request body
 	if err := c.BindJSON(&newAsset); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Wrong request body."})
@@ -156,9 +144,57 @@ func PostAsset(c *gin.Context) {
 	newAsset.ID = primitive.NewObjectID()
 	newAsset.ProductID = product.ID
 
+	insertResult, err := assetsCollection.InsertOne(ctx, newAsset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong with insertion"})
+		return
+	}
+	fmt.Println("Inserted Asset:", insertResult.InsertedID)
+	c.JSON(http.StatusCreated, gin.H{"message": "Succesfully added asset."})
+
+}
+
+func PostAuctionAsset(c *gin.Context) {
+	/* establish connection to the database*/
+	opt := options.Client().ApplyURI(databaseURI)
+	client, err := mongo.NewClient(opt)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong with database connection"})
+		return
+	}
+
+	ctx := context.TODO()
+
+	err = client.Connect(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong with database connection"})
+		return
+	}
+
+	defer client.Disconnect(ctx)
+
+	auctionDB := client.Database("auctionDB")
+	//convert asset id to obj id
+	asset_id, err := primitive.ObjectIDFromHex(c.Param("assetid"))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "Did not find auction"})
+		return
+	}
+
+	/*get the auction coresponding to auctionid */
+	var auction Auction
+	auction_id := c.Param("id")
+	auction_objId, _ := primitive.ObjectIDFromHex(auction_id)
+
+	err = client.Database("auctionDB").Collection("auctions").FindOne(ctx, bson.M{"_id": auction_objId}).Decode(&auction) //charge
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "Did not find auction"})
+		return
+	}
+
 	//add the new assetID to auction assetid table
 	var table []primitive.ObjectID = auction.AssetIDs
-	table = append(table, newAsset.ID)
+	table = append(table, asset_id)
 	//update the assetIDs table of the auction
 	filter := bson.M{"_id": auction_objId}
 	update := bson.M{"$set": bson.M{"_assetids": table}}
@@ -169,13 +205,7 @@ func PostAsset(c *gin.Context) {
 		return
 	}
 
-	insertResult, err := assetsCollection.InsertOne(ctx, newAsset)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong with insertion"})
-		return
-	}
-	fmt.Println("Inserted Asset:", insertResult.InsertedID)
-	c.JSON(http.StatusCreated, gin.H{"message": "Succesfully added asset."})
+	c.JSON(http.StatusOK, gin.H{"message": "Succesfully updated auction assets."})
 
 }
 
