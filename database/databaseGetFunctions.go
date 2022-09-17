@@ -122,7 +122,8 @@ func GetBids(c *gin.Context) {
 
 	results, err := bidsCollection.Find(ctx, bson.M{"_auctionid": objId})
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"message": "Did not find bids in this auction."})
+		//c.JSON(http.StatusNotFound, gin.H{"message": "Did not find bids in this auction."})
+		c.JSON(http.StatusOK, nil)
 		return
 	}
 
